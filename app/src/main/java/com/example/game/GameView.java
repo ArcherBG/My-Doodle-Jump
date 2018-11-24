@@ -6,8 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -22,9 +22,12 @@ public class GameView extends SurfaceView implements Runnable {
     private boolean running;
     private int viewWidth;
     private int viewHeight;
-    private Bitmap playerBitmap;
     private Player player;
-    private Bitmap buttonMoveBitmap;
+    private Bitmap playerBitmap;
+    private Bitmap moveLeftBitmap;
+    private Bitmap moveRightBitmap;
+    private boolean movePlayerRight;
+    private boolean movePlayerLeft;
 
     public GameView(Context context) {
         super(context);
@@ -53,14 +56,18 @@ public class GameView extends SurfaceView implements Runnable {
         Canvas canvas;
         while (running) {
             if (surfaceHolder.getSurface().isValid()) {
-                int x = player.getX();
-                int y = player.getY();
                 canvas = surfaceHolder.lockCanvas();
-
                 canvas.save();
                 canvas.drawColor(Color.BLUE);
-                canvas.drawBitmap(playerBitmap, x, y, paint);
-                canvas.drawBitmap(buttonMoveBitmap, 950, 1450, paint);
+                if (movePlayerRight) {
+                    player.update(player.getX() + 10, player.getY());
+                    canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
+                } else if (movePlayerLeft) {
+                    player.update(player.getX() - 10, player.getY());
+                }
+                canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
+                canvas.drawBitmap(moveLeftBitmap, 200, 1450, paint);
+                canvas.drawBitmap(moveRightBitmap, 950, 1450, paint);
 
                 canvas.restore();
                 surfaceHolder.unlockCanvasAndPost(canvas);
@@ -73,22 +80,35 @@ public class GameView extends SurfaceView implements Runnable {
         super.onSizeChanged(w, h, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
-        player = new Player(viewWidth / 2, viewHeight - 300);
+        player = new Player(viewWidth / 2, viewHeight - 300, 50);
         playerBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_menu_mylocation);
-        buttonMoveBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_input_add);
+        moveLeftBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_input_add);
+        moveRightBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_input_add);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int) event.getX();
         int y = (int) event.getY();
-
+        Log.d(TAG, "X: " + x + " Y: " + y);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
+                // If right button is clicked raise flag
+                if (x > 900 && x < 1000
+                        && y > 1300 && y < 1500) {
+                    movePlayerRight = true;
+                }
+                // If left button is clicked raise flag
+                if (x > 100 && x < 300
+                        && y > 1300 && y < 1500) {
+                    movePlayerLeft = true;
+                }
                 invalidate();
                 break;
             }
             case MotionEvent.ACTION_UP: {
+                movePlayerRight = false;
+                movePlayerLeft = false;
                 invalidate();
                 break;
             }

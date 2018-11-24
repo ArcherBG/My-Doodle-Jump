@@ -3,10 +3,12 @@ package com.example.game;
 public class Player {
     private int x;
     private int y;
+    private int radius;
 
-    public Player(int viewWidth, int viewHeight) {
+    public Player(int viewWidth, int viewHeight, int radius) {
         this.x = viewWidth;
         this.y = viewHeight;
+        this.radius = radius;
     }
 
     public int getX() {
