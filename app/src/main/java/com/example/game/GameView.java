@@ -6,15 +6,19 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+
 public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
-    private static final int PIXELS_TO_MOVE = 15;
+    private static final int PIXELS_TO_MOVE = 20;
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -25,14 +29,18 @@ public class GameView extends SurfaceView implements Runnable {
     private int viewHeight;
     private int buttonOffset;
     private Player player;
+    private Bitmap backgroundBitmap;
     private Bitmap playerBitmap;
     private Bitmap moveLeftBitmap;
     private Bitmap moveRightBitmap;
+    private ArrayList<Rect> obstaclesArray;
     private boolean movePlayerRight;
     private boolean movePlayerLeft;
     private int buttonY;
     private int leftButtonX;
     private int rightButtonX;
+    private long prevTimeSpawn;
+    private long prevTimeMoved;
 
     public GameView(Context context) {
         super(context);
@@ -51,6 +59,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void init(Context context) {
         this.context = context;
+        obstaclesArray = new ArrayList<>();
         surfaceHolder = getHolder();
         paint = new Paint();
         paint.setColor(Color.DKGRAY);
@@ -63,7 +72,15 @@ public class GameView extends SurfaceView implements Runnable {
             if (surfaceHolder.getSurface().isValid()) {
                 canvas = surfaceHolder.lockCanvas();
                 canvas.save();
-                canvas.drawColor(Color.BLUE);
+                canvas.drawBitmap(backgroundBitmap, 0, 0, paint);
+
+                spawnObstacles();
+
+                moveObstacles();
+                for (Rect obstacle : obstaclesArray) {
+                    canvas.drawRect(obstacle, paint);
+                }
+
                 if (movePlayerRight) {
                     player.update(player.getX() + PIXELS_TO_MOVE, player.getY());
                     canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
@@ -85,11 +102,43 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 
+
+    private void spawnObstacles() {
+        // Spawn an obstacle every 3 second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - prevTimeSpawn > 3000) {
+            prevTimeSpawn = currentTime;
+
+            int left = (int)(Math.random() * 1000);
+            int right = (int) (left +  (Math.random() * 1000)); // right > left
+            obstaclesArray.add(new Rect(left, 0, right, 50));
+        }
+    }
+
+    private void moveObstacles() {
+        int moveBy = 100;
+
+        // Move obstacles every second
+        long currentTime = System.currentTimeMillis();
+        if (System.currentTimeMillis() - prevTimeMoved > 1000) {
+            prevTimeMoved = currentTime;
+
+            for (Rect obstacle : obstaclesArray) {
+                obstacle.set(
+                        obstacle.left,
+                        obstacle.top + moveBy,
+                        obstacle.right,
+                        obstacle.bottom + moveBy);
+            }
+        }
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(viewWidth, viewHeight, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
+        backgroundBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.backgound);
 
         moveLeftBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_icon_left);
         moveRightBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_icon_right);
