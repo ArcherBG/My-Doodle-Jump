@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -18,7 +17,10 @@ import java.util.ArrayList;
 
 public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
-    private static final int PIXELS_TO_MOVE = 20;
+    private static final int CREATE_OBSTACLE_EVERY = 2000; // in ms
+    private static final int PLAYER_MOVE_MY = 15;
+    private static final int OBSTACLE_MOVE_BY = 10;
+
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -74,20 +76,25 @@ public class GameView extends SurfaceView implements Runnable {
                 canvas.save();
                 canvas.drawBitmap(backgroundBitmap, 0, 0, paint);
 
-                spawnObstacles();
-
+                createObstacles();
                 moveObstacles();
+                // Draw obstacles
                 for (Rect obstacle : obstaclesArray) {
                     canvas.drawRect(obstacle, paint);
                 }
+                removeObstaclesOutOfScreen();
 
                 if (movePlayerRight) {
-                    player.update(player.getX() + PIXELS_TO_MOVE, player.getY());
+                    player.update(player.getX() + PLAYER_MOVE_MY, player.getY());
                     canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
                 } else if (movePlayerLeft) {
-                    player.update(player.getX() - PIXELS_TO_MOVE, player.getY());
+                    player.update(player.getX() - PLAYER_MOVE_MY, player.getY());
                 }
                 canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
+
+                if (hasPlayerCollided()) {
+                    pause();
+                }
 
                 // Set buttons on screen
                 buttonY = viewHeight - (moveLeftBitmap.getHeight() + buttonOffset);
@@ -102,36 +109,47 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 
+    private void removeObstaclesOutOfScreen() {
+        //TODO
+    }
 
-    private void spawnObstacles() {
-        // Spawn an obstacle every 3 second
+    private void createObstacles() {
         long currentTime = System.currentTimeMillis();
-        if (currentTime - prevTimeSpawn > 3000) {
+        if (currentTime - prevTimeSpawn > CREATE_OBSTACLE_EVERY) {
             prevTimeSpawn = currentTime;
 
-            int left = (int)(Math.random() * 1000);
-            int right = (int) (left +  (Math.random() * 1000)); // right > left
+            int left = (int) (Math.random() * 1000);
+            int right = (int) (left + (Math.random() * 1000)); // right > left
             obstaclesArray.add(new Rect(left, 0, right, 50));
         }
     }
 
     private void moveObstacles() {
-        int moveBy = 100;
 
-        // Move obstacles every second
+        // Move obstacles at 60 fps
         long currentTime = System.currentTimeMillis();
-        if (System.currentTimeMillis() - prevTimeMoved > 1000) {
+        if (System.currentTimeMillis() - prevTimeMoved > 1000 / 60) {
             prevTimeMoved = currentTime;
 
             for (Rect obstacle : obstaclesArray) {
                 obstacle.set(
                         obstacle.left,
-                        obstacle.top + moveBy,
+                        obstacle.top + OBSTACLE_MOVE_BY,
                         obstacle.right,
-                        obstacle.bottom + moveBy);
+                        obstacle.bottom + OBSTACLE_MOVE_BY);
             }
         }
     }
+
+    private boolean hasPlayerCollided() {
+        for (Rect obstacle : obstaclesArray) {
+            if (obstacle.intersect(player.getX(), player.getY(), player.getX() + player.getViewWidth(), player.getY() + player.getViewHeight())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
