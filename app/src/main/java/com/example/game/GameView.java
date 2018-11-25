@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 
 public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
+    private static final int PIXELS_TO_MOVE = 15;
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -22,12 +23,16 @@ public class GameView extends SurfaceView implements Runnable {
     private boolean running;
     private int viewWidth;
     private int viewHeight;
+    private int buttonOffset;
     private Player player;
     private Bitmap playerBitmap;
     private Bitmap moveLeftBitmap;
     private Bitmap moveRightBitmap;
     private boolean movePlayerRight;
     private boolean movePlayerLeft;
+    private int buttonY;
+    private int leftButtonX;
+    private int rightButtonX;
 
     public GameView(Context context) {
         super(context);
@@ -60,14 +65,19 @@ public class GameView extends SurfaceView implements Runnable {
                 canvas.save();
                 canvas.drawColor(Color.BLUE);
                 if (movePlayerRight) {
-                    player.update(player.getX() + 10, player.getY());
+                    player.update(player.getX() + PIXELS_TO_MOVE, player.getY());
                     canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
                 } else if (movePlayerLeft) {
-                    player.update(player.getX() - 10, player.getY());
+                    player.update(player.getX() - PIXELS_TO_MOVE, player.getY());
                 }
                 canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
-                canvas.drawBitmap(moveLeftBitmap, 200, 1450, paint);
-                canvas.drawBitmap(moveRightBitmap, 950, 1450, paint);
+
+                // Set buttons on screen
+                buttonY = viewHeight - (moveLeftBitmap.getHeight() + buttonOffset);
+                leftButtonX = buttonOffset;
+                rightButtonX = viewWidth - (moveRightBitmap.getWidth() + buttonOffset);
+                canvas.drawBitmap(moveLeftBitmap, leftButtonX, buttonY, paint);
+                canvas.drawBitmap(moveRightBitmap, rightButtonX, buttonY, paint);
 
                 canvas.restore();
                 surfaceHolder.unlockCanvasAndPost(canvas);
@@ -77,13 +87,19 @@ public class GameView extends SurfaceView implements Runnable {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
+        super.onSizeChanged(viewWidth, viewHeight, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
-        player = new Player(viewWidth / 2, viewHeight - 300, 50);
-        playerBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_menu_mylocation);
-        moveLeftBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_input_add);
-        moveRightBitmap = BitmapFactory.decodeResource(context.getResources(), android.R.drawable.ic_input_add);
+
+        moveLeftBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_icon_left);
+        moveRightBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_icon_right);
+        buttonOffset = (viewWidth / 15);
+
+        // Set up player image and position
+        playerBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_icon_player);
+        int playerLocationX = (viewWidth + playerBitmap.getWidth()) / 2;
+        int playerLocationY = viewHeight - ((buttonOffset * 2) + moveLeftBitmap.getHeight() + playerBitmap.getHeight());
+        player = new Player(playerLocationX, playerLocationY, playerBitmap.getWidth(), playerBitmap.getHeight());
     }
 
     @Override
@@ -93,15 +109,18 @@ public class GameView extends SurfaceView implements Runnable {
         Log.d(TAG, "X: " + x + " Y: " + y);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
-                // If right button is clicked raise flag
-                if (x > 900 && x < 1000
-                        && y > 1300 && y < 1500) {
-                    movePlayerRight = true;
-                }
                 // If left button is clicked raise flag
-                if (x > 100 && x < 300
-                        && y > 1300 && y < 1500) {
+                if ((x > leftButtonX) && (x < leftButtonX + moveLeftBitmap.getWidth())
+                        && (y > buttonY) && (y < buttonY + moveLeftBitmap.getWidth())) {
+                    Log.d(TAG, "Left Btn click");
                     movePlayerLeft = true;
+                }
+
+                // If right button is clicked raise flag
+                if ((x > rightButtonX) && (x < rightButtonX + moveRightBitmap.getWidth())
+                        && (y > buttonY) && (y < buttonY + moveRightBitmap.getWidth())) {
+                    Log.d(TAG, "Right Btn click");
+                    movePlayerRight = true;
                 }
                 invalidate();
                 break;
