@@ -13,14 +13,14 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
     private static final int CREATE_OBSTACLE_EVERY = 2000; // in ms
     private static final int PLAYER_MOVE_MY = 15;
     private static final int OBSTACLE_MOVE_BY = 10;
-
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -35,7 +35,7 @@ public class GameView extends SurfaceView implements Runnable {
     private Bitmap playerBitmap;
     private Bitmap moveLeftBitmap;
     private Bitmap moveRightBitmap;
-    private ArrayList<Rect> obstaclesArray;
+    private Queue<Rect> obstacles;
     private boolean movePlayerRight;
     private boolean movePlayerLeft;
     private int buttonY;
@@ -61,10 +61,10 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void init(Context context) {
         this.context = context;
-        obstaclesArray = new ArrayList<>();
         surfaceHolder = getHolder();
         paint = new Paint();
         paint.setColor(Color.DKGRAY);
+        obstacles = new LinkedList<Rect>();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class GameView extends SurfaceView implements Runnable {
                 createObstacles();
                 moveObstacles();
                 // Draw obstacles
-                for (Rect obstacle : obstaclesArray) {
+                for (Rect obstacle : obstacles) {
                     canvas.drawRect(obstacle, paint);
                 }
                 removeObstaclesOutOfScreen();
@@ -110,7 +110,14 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void removeObstaclesOutOfScreen() {
-        //TODO
+        Log.d(TAG, "removeObstaclesOutOfScreen.  count: " + obstacles.size());
+     while(obstacles.peek() != null) {
+         if(obstacles.peek().top > viewHeight){
+             obstacles.remove();
+         } else {
+             break;
+         }
+     }
     }
 
     private void createObstacles() {
@@ -120,7 +127,7 @@ public class GameView extends SurfaceView implements Runnable {
 
             int left = (int) (Math.random() * 1000);
             int right = (int) (left + (Math.random() * 1000)); // right > left
-            obstaclesArray.add(new Rect(left, 0, right, 50));
+            obstacles.add(new Rect(left, 0, right, 50));
         }
     }
 
@@ -131,7 +138,7 @@ public class GameView extends SurfaceView implements Runnable {
         if (System.currentTimeMillis() - prevTimeMoved > 1000 / 60) {
             prevTimeMoved = currentTime;
 
-            for (Rect obstacle : obstaclesArray) {
+            for (Rect obstacle : obstacles) {
                 obstacle.set(
                         obstacle.left,
                         obstacle.top + OBSTACLE_MOVE_BY,
@@ -142,7 +149,7 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private boolean hasPlayerCollided() {
-        for (Rect obstacle : obstaclesArray) {
+        for (Rect obstacle : obstacles) {
             if (obstacle.intersect(player.getX(), player.getY(), player.getX() + player.getViewWidth(), player.getY() + player.getViewHeight())) {
                 return true;
             }
