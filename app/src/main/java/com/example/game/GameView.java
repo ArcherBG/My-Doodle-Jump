@@ -19,8 +19,8 @@ import java.util.Queue;
 public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
     private static final int CREATE_OBSTACLE_EVERY = 2000; // in ms
-    private static final int PLAYER_MOVE_MY = 15;
-    private static final int OBSTACLE_MOVE_BY = 10;
+    private static final int PLAYER_MOVE_MY = 15; // in pixels
+    private static final int OBSTACLE_MOVE_BY = 10; // in pixels
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -110,7 +110,6 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void removeObstaclesOutOfScreen() {
-        Log.d(TAG, "removeObstaclesOutOfScreen.  count: " + obstacles.size());
      while(obstacles.peek() != null) {
          if(obstacles.peek().top > viewHeight){
              obstacles.remove();
