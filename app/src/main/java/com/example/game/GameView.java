@@ -45,7 +45,7 @@ public class GameView extends SurfaceView implements Runnable {
     private int rightButtonX;
     private long prevTimeSpawn;
     private long prevTimeMoved;
-
+ 
     public GameView(Context context) {
         super(context);
         init(context);
@@ -96,10 +96,16 @@ public class GameView extends SurfaceView implements Runnable {
                 canvas.drawText(score, viewWidth - (viewWidth / 3), viewHeight / 10, textPaint);
 
                 if (movePlayerRight) {
-                    player.update(player.getX() + PLAYER_MOVE_MY, player.getY());
-                    canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
+                    int newX;
+                    if ((player.getX() + player.getViewWidth() + PLAYER_MOVE_MY) > viewWidth) {
+                        newX = viewWidth - player.getViewWidth();
+                    } else {
+                        newX = player.getX() + PLAYER_MOVE_MY;
+                    }
+                    player.update(newX, player.getY());
                 } else if (movePlayerLeft) {
-                    player.update(player.getX() - PLAYER_MOVE_MY, player.getY());
+                    int newX = ((player.getX() - PLAYER_MOVE_MY) > 0) ? player.getX() - PLAYER_MOVE_MY : 0;
+                    player.update(newX, player.getY());
                 }
                 canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
 

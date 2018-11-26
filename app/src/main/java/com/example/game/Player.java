@@ -26,8 +26,8 @@ public class Player {
     public int getViewHeight() { return viewHeight; }
 
     public void update(int x, int y) {
-        this.x = (this.x > 0) ? x : 0;
-        this.y = (this.y > 0) ? y : 0;
+        this.x = x;
+        this.y = y;
     }
 
 }
