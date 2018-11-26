@@ -71,6 +71,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     @Override
     public void run() {
+        long startTime = System.currentTimeMillis();
         Canvas canvas;
         while (running) {
             if (surfaceHolder.getSurface().isValid()) {
@@ -82,9 +83,17 @@ public class GameView extends SurfaceView implements Runnable {
                 moveObstacles();
                 // Draw obstacles
                 for (Rect obstacle : obstacles) {
+                    paint.setColor(Color.DKGRAY);
                     canvas.drawRect(obstacle, paint);
                 }
                 removeObstaclesOutOfScreen();
+
+                Paint textPaint = new Paint();
+                textPaint.setColor(getResources().getColor(R.color.colorPrimary));
+                textPaint.setTextSize(55f);
+                // Calculate a score based on how long the player is alive
+                String score = "Score: " + ((System.currentTimeMillis() - startTime) / 10);
+                canvas.drawText(score, viewWidth - (viewWidth / 3), viewHeight / 10, textPaint);
 
                 if (movePlayerRight) {
                     player.update(player.getX() + PLAYER_MOVE_MY, player.getY());
