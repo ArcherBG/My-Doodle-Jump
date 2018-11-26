@@ -43,6 +43,9 @@ public class GameView extends SurfaceView implements Runnable {
     private int rightButtonX;
     private long prevTimeSpawn;
     private long prevTimeMoved;
+    private Bitmap restartBitmap;
+    private int restartX;
+    private int restartY;
 
     public GameView(Context context) {
         super(context);
@@ -128,6 +131,8 @@ public class GameView extends SurfaceView implements Runnable {
                     int right = (int) ((viewWidth / 2) - (paint.measureText("Game Over") / 2));
                     canvas.drawBitmap(backgroundBitmap, 0, 0, paint);
                     canvas.drawText("Game Over", right, viewHeight / 2, paint);
+
+                    canvas.drawBitmap(restartBitmap, restartX, restartY, paint);
                     running = false;
                 }
 
@@ -202,6 +207,10 @@ public class GameView extends SurfaceView implements Runnable {
         int playerLocationX = (viewWidth + playerBitmap.getWidth()) / 2;
         int playerLocationY = viewHeight - ((buttonOffset * 2) + moveLeftBitmap.getHeight() + playerBitmap.getHeight());
         player = new Player(playerLocationX, playerLocationY, playerBitmap.getWidth(), playerBitmap.getHeight());
+
+        restartBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_refresh);
+        restartX = (viewWidth / 2) - (restartBitmap.getWidth() / 2);
+        restartY = viewHeight / 2 + 150;
     }
 
     @Override
@@ -224,6 +233,8 @@ public class GameView extends SurfaceView implements Runnable {
                     Log.d(TAG, "Right Btn click");
                     movePlayerRight = true;
                 }
+
+                // TODO Handle restart button click
                 invalidate();
                 break;
             }
