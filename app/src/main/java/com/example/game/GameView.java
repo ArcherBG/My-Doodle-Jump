@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.Region;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -92,16 +94,22 @@ public class GameView extends SurfaceView implements Runnable {
                 }
                 canvas.drawBitmap(playerBitmap, player.getX(), player.getY(), paint);
 
-                if (hasPlayerCollided()) {
-                    pause();
-                }
-
                 // Set buttons on screen
                 buttonY = viewHeight - (moveLeftBitmap.getHeight() + buttonOffset);
                 leftButtonX = buttonOffset;
                 rightButtonX = viewWidth - (moveRightBitmap.getWidth() + buttonOffset);
                 canvas.drawBitmap(moveLeftBitmap, leftButtonX, buttonY, paint);
                 canvas.drawBitmap(moveRightBitmap, rightButtonX, buttonY, paint);
+
+                if (hasPlayerCollided()) {
+                    // Write game over and stop the game
+                    paint.setColor(getResources().getColor(R.color.red));
+                    paint.setTextSize(100f);
+                    int right = (int) ((viewWidth / 2) - (paint.measureText("Game Over") / 2));
+                    canvas.drawBitmap(backgroundBitmap, 0, 0, paint);
+                    canvas.drawText("Game Over", right, viewHeight / 2, paint);
+                    running = false;
+                }
 
                 canvas.restore();
                 surfaceHolder.unlockCanvasAndPost(canvas);
@@ -110,13 +118,13 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void removeObstaclesOutOfScreen() {
-     while(obstacles.peek() != null) {
-         if(obstacles.peek().top > viewHeight){
-             obstacles.remove();
-         } else {
-             break;
-         }
-     }
+        while (obstacles.peek() != null) {
+            if (obstacles.peek().top > viewHeight) {
+                obstacles.remove();
+            } else {
+                break;
+            }
+        }
     }
 
     private void createObstacles() {
@@ -126,6 +134,7 @@ public class GameView extends SurfaceView implements Runnable {
 
             int left = (int) (Math.random() * 1000);
             int right = (int) (left + (Math.random() * 1000)); // right > left
+            right = (right - left < 300) ? right * 2 : right; // Increase rect length if it is too short
             obstacles.add(new Rect(left, 0, right, 50));
         }
     }
