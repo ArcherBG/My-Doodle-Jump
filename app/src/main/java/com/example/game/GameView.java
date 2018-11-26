@@ -6,9 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.Region;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,7 +20,7 @@ public class GameView extends SurfaceView implements Runnable {
     private final static String TAG = GameView.class.getSimpleName();
     private static final int CREATE_OBSTACLE_EVERY = 2000; // in ms
     private static final int PLAYER_MOVE_MY = 15; // in pixels
-    private static final int OBSTACLE_MOVE_BY = 10; // in pixels
+    private int obstacleMoveBy = 10; // in pixels
 
     private Context context;
     private SurfaceHolder surfaceHolder;
@@ -45,7 +43,7 @@ public class GameView extends SurfaceView implements Runnable {
     private int rightButtonX;
     private long prevTimeSpawn;
     private long prevTimeMoved;
- 
+
     public GameView(Context context) {
         super(context);
         init(context);
@@ -72,12 +70,19 @@ public class GameView extends SurfaceView implements Runnable {
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();
+        long prevTimeDifficultyIncreased = startTime;
         Canvas canvas;
         while (running) {
             if (surfaceHolder.getSurface().isValid()) {
                 canvas = surfaceHolder.lockCanvas();
                 canvas.save();
                 canvas.drawBitmap(backgroundBitmap, 0, 0, paint);
+
+                // Increase difficulty level every second
+                if ((System.currentTimeMillis() - prevTimeDifficultyIncreased) > 1000) {
+                    obstacleMoveBy += 1;
+                    prevTimeDifficultyIncreased = System.currentTimeMillis();
+                }
 
                 createObstacles();
                 moveObstacles();
@@ -164,9 +169,9 @@ public class GameView extends SurfaceView implements Runnable {
             for (Rect obstacle : obstacles) {
                 obstacle.set(
                         obstacle.left,
-                        obstacle.top + OBSTACLE_MOVE_BY,
+                        obstacle.top + obstacleMoveBy,
                         obstacle.right,
-                        obstacle.bottom + OBSTACLE_MOVE_BY);
+                        obstacle.bottom + obstacleMoveBy);
             }
         }
     }
